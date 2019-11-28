@@ -2,52 +2,126 @@
 #include <stdlib.h>
 #include <string.h>
 
-void SkipSpaces (char** ptr){
-    while (**ptr == ' ')
-        (*ptr)++;
-}
+struct Skip_symb
+{
+    char* skip;
+    unsigned arr_size;
+};
 
-void WordSkip (char** ptr, bool* flag){
-    while (**ptr != ' '){
+void SkipSpaces (char** ptr, struct Skip_symb skip)
+{
+    printf ("I'm in Sk_Sp (ptr = %d)\n", (int)(*ptr));
 
-        if (**ptr == '\0'){
-            *flag = true;
+    char flag = 0;
+    char* i;
+
+    for (i = *ptr; ; ++i)
+    {
+        flag = 0;
+
+        for (unsigned j = 0; j < skip.arr_size; ++j)
+            if (*i == skip.skip[j])
+                flag++;
+
+        if (flag == 0)
             break;
-        }
-
-        (*ptr)++;
     }
-    **ptr = '\0';
+    *ptr = i;
 }
 
-void Analis (char* word_begin, const char* comp){
+char WordSkip (char** ptr, struct Skip_symb skip)
+{
+    char flag = 0;
+    char* i;
 
+    for (i = *ptr; ; ++i)
+    {
+        flag = 0;
+
+        if (*i == '\0')
+            return -1;
+
+        for (unsigned j = 0; j < skip.arr_size; ++j)
+            if (*i == skip.skip[j])
+                flag++;
+
+        printf ("In W_Sk: *ptr = %c\t flag = %d\n", *i, (int)flag);
+        if (flag != 0)
+            break;
+    }
+
+    *i = '\0';
+    *ptr = i;
+    return 1;
+}
+
+void Analis (char* word_begin, const char* comp)
+{
     if (strcmp (word_begin, comp) == 0)
-        printf("founded");
+        printf("founded\n");
 }
 
-void Strtok (char* text, const char* comp){
+char* Strtok (char* text, struct Skip_symb skip)
+{
+    static char* ptr = NULL;
 
-    int i = 0;
-    char* ptr = text;
-    bool flag = false;
+    if(text != NULL)
+        ptr = text;
 
-    while (!flag){
+    if(ptr == NULL)
+        return NULL;
 
-        SkipSpaces(&ptr);
-        char* word_begin = ptr;
+    printf ("ptr = %d\n", (int)ptr);
 
-        WordSkip(&ptr, &flag);
-        Analis(word_begin, comp);
+    SkipSpaces(&ptr, skip);
 
-        ptr++;
+    char* word_begin = ptr;
+
+    if (WordSkip(&ptr, skip) == -1)
+    {
+        ptr = NULL;
+        return word_begin;
     }
+
+    ptr++;
+    return word_begin;
 }
 
 int main()
 {
-    char text[] = "hello,     i'm from Russia";
+    char text[] = "hello, i'm from Russia";
     char comp[] = "i'm";
-    Strtok (text, comp);
+
+    struct Skip_symb skip;
+    skip.arr_size = 2;
+    skip.skip = (char*) calloc (skip.arr_size, sizeof(char));
+    skip.skip[0] = ' ';
+    skip.skip[1] = ',';
+
+    char* w_beg = Strtok(text, skip);
+    Analis(w_beg, comp);
+
+    while ((w_beg = Strtok(NULL, skip)) != NULL)
+        Analis(w_beg, comp);
+
+    printf ("w-beg = %p\n", w_beg);
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
